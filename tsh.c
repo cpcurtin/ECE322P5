@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <fcntl.h>
 
 /* Misc manifest constants */
 #define MAXLINE 1024   /* max line size */
@@ -195,25 +196,37 @@ void eval(char *cmdline)
                 for (int i = 0; i < T; i++)
                 {
                     if (strcmp(argv[i], "<") == 0)
-                    {
-                        //......
+                    {   
+                        int newInput = open(argv[i+1],O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new input file
+                        close(0); //close stdin
+                        dup(newInput); // set new standard input file
+                        close(newInput); // Set only the output of file argv[i+1] to redirect 
                     }
                     else if (strcmp(argv[i], ">") == 0)
                     {
-                        //......
+                        int newOutput = open(argv[i+1], O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IR WXO); // Open new output file
+                        close(1); // close stdout
+                        dup(newOutput); // Set new standard output file
+                        close(newOutput); // Set only the input of file argv[i+1] to redirect
                     }
                     else if (strcmp(argv[i], "2>") == 0)
                     {
-                        //......
+                        int newError = open(argv[i+1],O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new error file
+                        close(2); // close stderr
+                        dup(newError); // Set new standard error file
+                        close(newError); // Set only the input of file argv[i+1] to redirect
                     }
                     else if (strcmp(argv[i], ">>") == 0)
                     {
-                        //......
+                        int newAppend = open(argv[i+1],O_WRONLY|O_CREAT|O_APPEND,S_IRWXU|S_IRWXG|S_IRWXO); // Open new append file, in append mode
+                        close(2); // close stderr, as append is being used
+                        dup(newAppend); // Set new standard error file to take append
+                        close(newAppend); // Set only the input of file argv[i+1] to redirect
                     }
-                    else if (strcmp(argv[i], "|") == 0)
-                    {
+                    //else if (strcmp(argv[i], "|") == 0)
+                    //{
                         // PIPEEEEEEE
-                    }
+                    //}
                 }
             // use a while loop to check which redir operators are used
             //  4 conditions - >,< ,>> ,2>
