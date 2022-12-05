@@ -175,6 +175,7 @@ void eval(char *cmdline)
     int bg;              // background job ?
     pid_t pid;           // process id
     sigset_t mask, prev;
+    size_t T = sizeof(argv)/sizeof(argv[0]);
     strcpy(mod, cmdline); // copy
 
     bg = parseline(mod, argv);
@@ -191,6 +192,29 @@ void eval(char *cmdline)
         pid = Fork();
 
             if ((pid == 0){
+                for (int i = 0; i < T; i++)
+                {
+                    if (strcmp(argv[i], "<") == 0)
+                    {
+                        //......
+                    }
+                    else if (strcmp(argv[i], ">") == 0)
+                    {
+                        //......
+                    }
+                    else if (strcmp(argv[i], "2>") == 0)
+                    {
+                        //......
+                    }
+                    else if (strcmp(argv[i], ">>") == 0)
+                    {
+                        //......
+                    }
+                    else if (strcmp(argv[i], "|") == 0)
+                    {
+                        // PIPEEEEEEE
+                    }
+                }
             // use a while loop to check which redir operators are used
             //  4 conditions - >,< ,>> ,2>
             // compare appropriate index with argv
