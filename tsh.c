@@ -188,7 +188,21 @@ void eval(char *cmdline)
         sigemptyset(&mask);
         sigaddset(&mask, SIGCHLD);
         sigprocmask(SIG_BLOCK, &mask, &prev);
-        if ((pid = fork()) == 0) // child prcess
+        pid = Fork();
+
+            if ((pid == 0){
+                //use a while loop to check which redir operators are used 
+                // 4 conditions - >,< ,>> ,2> 
+                //compare appropriate index with argv
+                //set argv[i] // i - appropriate index for the redir operators 
+                // make sure to use else if statements and set argv[i] = NULL; after each else if statement / I had a segfault 
+
+                //testing Notes:
+                //append and stdout work similarly 
+                //test stderror without tsh>
+
+
+            } // child prcess
         {
             sigprocmask(SIG_SETMASK, &prev, NULL); // unblock sigchld
             if (execve(argv[0], argv, environ) < 0)
