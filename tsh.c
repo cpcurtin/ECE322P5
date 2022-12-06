@@ -176,7 +176,7 @@ void eval(char *cmdline)
     int bg;              // background job ?
     pid_t pid;           // process id
     sigset_t mask, prev;
-    size_t T = sizeof(argv)/sizeof(argv[0]);
+    //size_t T = sizeof(argv)/sizeof(argv[0]);
     strcpy(mod, cmdline); // copy
 
     bg = parseline(mod, argv);
@@ -190,43 +190,54 @@ void eval(char *cmdline)
         sigemptyset(&mask);
         sigaddset(&mask, SIGCHLD);
         sigprocmask(SIG_BLOCK, &mask, &prev);
-        pid = Fork();
+        pid = fork();
 
-            if ((pid == 0){
-                for (int i = 0; i < T; i++)
+        if (pid == 0){
+                for (int i = 0; i < (sizeof(argv)/sizeof(argv[0])); i++) // Loop within size of argv
                 {
-                    if (strcmp(argv[i], "<") == 0)
-                    {   
-                        int newInput = open(argv[i+1],O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new input file
-                        close(0); //close stdin
-                        dup(newInput); // set new standard input file
-                        close(newInput); // Set only the output of file argv[i+1] to redirect 
-                    }
-                    else if (strcmp(argv[i], ">") == 0)
+                    //printf("in for %d", i);
+                    if (argv[i]) // Check to make sure end hasn't been reached. i+1 is fine because the end of argv has to be a file name
                     {
-                        int newOutput = open(argv[i+1], O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IR WXO); // Open new output file
-                        close(1); // close stdout
-                        dup(newOutput); // Set new standard output file
-                        close(newOutput); // Set only the input of file argv[i+1] to redirect
+                        //printf("pre-cases");
+                        if (strcmp(argv[i], "<") == 0)
+                        {   
+                            printf("fuck me");
+                            //int newInput = open(argv[i-1],O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new input file
+                            //close(0); //close stdin
+                            //dup2(newInput, STDIN_FILENO); // set new standard input file
+                            //close(newInput); // Set only the output of file argv[i+1] to redirect
+                            //argv[i] = NULL; // Set to null to avoid seg fault
+                        }
+                        /*else if (strcmp(argv[i], ">") == 0)
+                        {
+                            int newOutput = open(argv[i+1], O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new output file
+                            printf("post-open");
+                            close(1); // close stdout
+                            printf("post-close(0)");
+                            dup(newOutput); // Set new standard output file
+                            printf("post dup");
+                            close(newOutput); // Set only the input of file argv[i+1] to redirect
+                            printf("post-close");
+                            argv[i] = NULL; // Set to null to avoid seg fault
+                            printf("end");
+                        }*/
+                        /*else if (strcmp(argv[i], "2>") == 0)
+                        {
+                            int newError = open(argv[i+1],O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new error file
+                            close(2); // close stderr
+                            dup(newError); // Set new standard error file
+                            close(newError); // Set only the input of file argv[i+1] to redirect
+                            argv[i] = NULL; // Set to null to avoid seg fault
+                        }*/
+                        /*else if (strcmp(argv[i], ">>") == 0)
+                        {
+                            int newAppend = open(argv[i+1],O_WRONLY|O_CREAT|O_APPEND,S_IRWXU|S_IRWXG|S_IRWXO); // Open new append file, in append mode
+                            close(2); // close stderr, as append is being used
+                            dup(newAppend); // Set new standard error file to take append
+                            close(newAppend); // Set only the input of file argv[i+1] to redirect
+                            argv[i] = NULL; // Set to null to avoid seg fault
+                        }*/
                     }
-                    else if (strcmp(argv[i], "2>") == 0)
-                    {
-                        int newError = open(argv[i+1],O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new error file
-                        close(2); // close stderr
-                        dup(newError); // Set new standard error file
-                        close(newError); // Set only the input of file argv[i+1] to redirect
-                    }
-                    else if (strcmp(argv[i], ">>") == 0)
-                    {
-                        int newAppend = open(argv[i+1],O_WRONLY|O_CREAT|O_APPEND,S_IRWXU|S_IRWXG|S_IRWXO); // Open new append file, in append mode
-                        close(2); // close stderr, as append is being used
-                        dup(newAppend); // Set new standard error file to take append
-                        close(newAppend); // Set only the input of file argv[i+1] to redirect
-                    }
-                    //else if (strcmp(argv[i], "|") == 0)
-                    //{
-                        // PIPEEEEEEE
-                    //}
                 }
             // use a while loop to check which redir operators are used
             //  4 conditions - >,< ,>> ,2>
@@ -235,12 +246,13 @@ void eval(char *cmdline)
             //  make sure to use else if statements and set argv[i] = NULL; after each else if statement / I had a segfault
 
             // testing Notes:
-            // append and stdout work similarly
+            // append and stdout work similarly, yeah ik
             // test stderror without tsh>
 
             // child prcess
 
             sigprocmask(SIG_SETMASK, &prev, NULL); // unblock sigchld
+            fprintf(stderr, "About to hit last execve\n");
             if (execve(argv[0], argv, environ) < 0)
             {
                 printf("%s: command not found.\n", argv[0]);
@@ -362,7 +374,7 @@ void do_bgfg(char **argv)
     struct job_t *temp_job = NULL; // temp job
     int jobid;                     // job id
     pid_t pid;                     // process id
-    if (argv[1] == NULL)           // no arguement
+    if (argv[1] == NULL)           // no argument
     {
         if (strcmp(argv[0], "fg") == 0)
         {
