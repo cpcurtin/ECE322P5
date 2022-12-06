@@ -190,42 +190,66 @@ void eval(char *cmdline)
         sigemptyset(&mask);
         sigaddset(&mask, SIGCHLD);
         sigprocmask(SIG_BLOCK, &mask, &prev);
-        if ((pid = fork()) == 0){
-            while(argv[i]) // Loop within size of argv
+        if ((pid = fork()) == 0)
+        {
+            while (argv[i]) // Loop within size of argv
             {
                 if (argv[i]) // Check to make sure end hasn't been reached. i+1 is fine because the end of argv has to be a file name
                 {
                     if (strncmp(argv[i], "<", 1) == 0)
-                    {   
-                        int newInput = open(argv[i-1],O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new input file
-                        close(0); //close stdin
-                        dup(newInput); // set new standard input file
-                        close(newInput); // Set only the output of file argv[i+1] to redirect
-                        argv[i] = NULL; // Set to null to avoid seg fault
+                    {
+                        int newInput = open(argv[i - 1], O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO); // Open new input file
+                        close(0);                                                                          // close stdin
+                        dup(newInput);                                                                     // set new standard input file
+                        close(newInput);                                                                   // Set only the output of file argv[i+1] to redirect
+                        argv[i] = NULL;                                                                    // Set to null to avoid seg fault
                     }
                     else if (strcmp(argv[i], ">") == 0)
                     {
-                        int newOutput = open(argv[i+1], O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new output file
-                        close(1); // close stdout
-                        dup(newOutput); // Set new standard output file
-                        close(newOutput); // Set only the input of file argv[i+1] to redirect
-                        argv[i] = NULL; // Set to null to avoid seg fault
+                        int newOutput = open(argv[i + 1], O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO); // Open new output file
+                        close(1);                                                                           // close stdout
+                        dup(newOutput);                                                                     // Set new standard output file
+                        close(newOutput);                                                                   // Set only the input of file argv[i+1] to redirect
+                        argv[i] = NULL;                                                                     // Set to null to avoid seg fault
                     }
                     else if (strcmp(argv[i], "2>") == 0)
                     {
-                        int newError = open(argv[i+1],O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO); // Open new error file
-                        close(2); // close stderr
-                        dup(newError); // Set new standard error file
-                        close(newError); // Set only the input of file argv[i+1] to redirect
-                        argv[i] = NULL; // Set to null to avoid seg fault
+                        int newError = open(argv[i + 1], O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO); // Open new error file
+                        close(2);                                                                          // close stderr
+                        dup(newError);                                                                     // Set new standard error file
+                        close(newError);                                                                   // Set only the input of file argv[i+1] to redirect
+                        argv[i] = NULL;                                                                    // Set to null to avoid seg fault
                     }
                     else if (strcmp(argv[i], ">>") == 0)
                     {
-                        int newAppend = open(argv[i+1],O_WRONLY|O_CREAT|O_APPEND,S_IRWXU|S_IRWXG|S_IRWXO); // Open new append file, in append mode
-                        close(2); // close stderr, as append is being used
-                        dup(newAppend); // Set new standard error file to take append
-                        close(newAppend); // Set only the input of file argv[i+1] to redirect
-                        argv[i] = NULL; // Set to null to avoid seg fault
+                        int newAppend = open(argv[i + 1], O_WRONLY | O_CREAT | O_APPEND | S_IRWXU | S_IRWXG | S_IRWXO); // Open new append file, in append mode
+                        close(2);                                                                                       // close stderr, as append is being used
+                        dup(newAppend);                                                                                 // Set new standard error file to take append
+                        close(newAppend);                                                                               // Set only the input of file argv[i+1] to redirect
+                        argv[i] = NULL;                                                                                 // Set to null to avoid seg fault
+                    }
+                    else if (strcmp(argv[i], "|") == 0)
+                    {
+                        int temp_pid;
+                        int thePipe[2];
+                        pipe(thePipe);
+                        temp_pid = fork();
+                        // Parent
+                        if (temp_pid > 0)
+                        {
+                            char message[6] = "Hello";
+                            int messageLen = 6;
+                            write(thePipe[1], message, messageLen);
+                            printf("Parent sent %s.\n", message);
+                        }
+                        // Child
+                        else if (temp_pid == 0)
+                        {
+                            char message[6];
+                            int messageLen = 6;
+                            read(thePipe[0], message, messageLen);
+                            printf("Parent received %s.\n", message);
+                        }
                     }
                 }
                 i++;
