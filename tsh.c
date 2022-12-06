@@ -224,12 +224,12 @@ void eval(char *cmdline)
                     else if (strcmp(argv[i], ">>") == 0)
                     {
                         int newAppend = open(argv[i + 1], O_WRONLY | O_CREAT | O_APPEND, S_IRWXU | S_IRWXG | S_IRWXO); // Open new append file, in append mode
-                        close(1);                                                                                       // close stdout, as append is being used
-                        dup(newAppend);                                                                                 // Set new standard output file to take append
-                        close(newAppend);                                                                               // Set only the input of file argv[i+1] to redirect
-                        argv[i] = NULL;                                                                                 // Set to null to avoid seg fault
+                        close(1);                                                                                      // close stdout, as append is being used
+                        dup(newAppend);                                                                                // Set new standard output file to take append
+                        close(newAppend);                                                                              // Set only the input of file argv[i+1] to redirect
+                        argv[i] = NULL;                                                                                // Set to null to avoid seg fault
                     }
-                    /*else if (strcmp(argv[i], "|") == 0)
+                    else if (strcmp(argv[i], "|") == 0)
                     {
                         int temp_pid;
                         int thePipe[2];
@@ -238,20 +238,14 @@ void eval(char *cmdline)
                         // Parent
                         if (temp_pid > 0)
                         {
-                            char message[6] = "Hello";
-                            int messageLen = 6;
-                            write(thePipe[1], message, messageLen);
-                            printf("Parent sent %s.\n", message);
+                            dup2(thePipe[1], STDOUT_FILENO);
                         }
                         // Child
                         else if (temp_pid == 0)
                         {
-                            char message[6];
-                            int messageLen = 6;
-                            read(thePipe[0], message, messageLen);
-                            printf("Parent received %s.\n", message);
+                            dup2(thePipe[0], STDIN_FILENO);
                         }
-                    }*/
+                    }
                 }
                 i++;
             }
