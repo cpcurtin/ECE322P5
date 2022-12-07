@@ -232,21 +232,21 @@ void eval(char *cmdline)
                     }
                     else if (strcmp(argv[i], "|") == 0)
                     {
+                        int temp_pid;
                         argv[i] = NULL; // clear operator
 
                         // create pipe
                         int thePipe[2];
                         pipe(thePipe);
-                        int temp_pid = fork(); // fork to split process
 
-                        if (temp_pid == 0)
+                        if ((temp_pid = fork()) == 0) // child
                         {
                             close(thePipe[0]);                  // close stdin
                             dup2(thePipe[1], STDOUT_FILENO);    // strout -> pipeout
                             close(thePipe[1]);                  // close unused end
                             execve(argv[i - 1], argv, environ); // execute leftside
                         }
-                        else
+                        else // parent
                         {
                             close(thePipe[1]);                  // close stdout
                             dup2(thePipe[0], STDIN_FILENO);     // strin -> pipein
