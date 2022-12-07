@@ -177,7 +177,6 @@ void eval(char *cmdline)
     int bg;              // background job ?
     pid_t pid;           // process id
     int i = 0;           // index for loop
-    int thingy = 1;
     sigset_t mask, prev;
     strcpy(mod, cmdline); // copy
 
@@ -193,10 +192,10 @@ void eval(char *cmdline)
         sigaddset(&mask, SIGCHLD);
         sigprocmask(SIG_BLOCK, &mask, &prev);
         if ((pid = fork()) == 0)
+        {
 
             while (argv[i]) // Loop within size of argv
             {
-                printf("%d %s", i, argv[i]);
                 if (argv[i]) // Check to make sure end hasn't been reached. i+1 is fine because the end of argv has to be a file name
                 {
                     if ((strcmp(argv[i], "<")) == 0)
@@ -205,7 +204,7 @@ void eval(char *cmdline)
                         close(0);                                                                          // close stdin
                         dup(newInput);                                                                     // set new standard input file
                         close(newInput);                                                                   // Set only the output of file argv[i+1] to redirect
-                        argv[i] = NULL;                                                                    // Set to null to avoid seg fault
+                        argv[i] = NULL;                                                                    // clear operator
                     }
                     else if (strcmp(argv[i], ">") == 0)
                     {
@@ -213,7 +212,7 @@ void eval(char *cmdline)
                         close(1);                                                                           // close stdout
                         dup(newOutput);                                                                     // Set new standard output file
                         close(newOutput);                                                                   // Set only the input of file argv[i+1] to redirect
-                        argv[i] = NULL;                                                                     // Set to null to avoid seg fault
+                        argv[i] = NULL;                                                                     // clear operator
                     }
                     else if (strcmp(argv[i], "2>") == 0)
                     {
@@ -221,7 +220,7 @@ void eval(char *cmdline)
                         close(2);                                                                          // close stderr
                         dup(newError);                                                                     // Set new standard error file
                         close(newError);                                                                   // Set only the input of file argv[i+1] to redirect
-                        argv[i] = NULL;                                                                    // Set to null to avoid seg fault
+                        argv[i] = NULL;                                                                    // clear operator
                     }
                     else if (strcmp(argv[i], ">>") == 0)
                     {
@@ -229,58 +228,36 @@ void eval(char *cmdline)
                         close(1);                                                                                      // close stdout, as append is being used
                         dup(newAppend);                                                                                // Set new standard output file to take append
                         close(newAppend);                                                                              // Set only the input of file argv[i+1] to redirect
-                        argv[i] = NULL;                                                                                // Set to null to avoid seg fault
+                        argv[i] = NULL;                                                                                // clear operator
                     }
                     else if (strcmp(argv[i], "|") == 0)
                     {
-                        int temp_pid;
+                        argv[i] = NULL; // clear operator
+
+                        // create pipe
                         int thePipe[2];
                         pipe(thePipe);
-                        temp_pid = fork();
+                        int temp_pid = fork(); // fork to split process
 
-                        // Child
                         if (temp_pid == 0)
                         {
-                            dup2(thePipe[0], 0);
-                            close(thePipe[1]);
-                            sigprocmask(SIG_SETMASK, &prev, NULL); // unblock sigchld
-                            if (execve(argv[i - 1], argv, environ) < 0)
-                            {
-                                printf("%s: command not found.\n", argv[0]);
-                                exit(0);
-                            }
-                            thingy = 0;
-                        } // Parent
-                        if (temp_pid > 0)
-                        {
-                            dup2(thePipe[1], 1);
-                            close(thePipe[0]);
-                            sigprocmask(SIG_SETMASK, &prev, NULL); // unblock sigchld
-                            if (execve(argv[i + 1], argv, environ) < 0)
-                            {
-                                printf("%s: command not found.\n", argv[0]);
-                                exit(0);
-                            }
-                            thingy = 0;
+                            close(thePipe[0]);                  // close stdin
+                            dup2(thePipe[1], STDOUT_FILENO);    // strout -> pipeout
+                            close(thePipe[1]);                  // close unused end
+                            execve(argv[i - 1], argv, environ); // execute leftside
                         }
-                        argv[i] = NULL;
+                        else
+                        {
+                            close(thePipe[1]);                  // close stdout
+                            dup2(thePipe[0], STDIN_FILENO);     // strin -> pipein
+                            close(thePipe[0]);                  // close unused end
+                            execve(argv[i + 1], argv, environ); // execute rightside
+                        }
                     }
                 }
-                i++;
+                i++; // inc iterator
             }
-        // use a while loop to check which redir operators are used
-        //  4 conditions - >,< ,>> ,2>
-        // compare appropriate index with argv
-        // set argv[i] // i - appropriate index for the redir operators
-        //  make sure to use else if statements and set argv[i] = NULL; after each else if statement / I had a segfault
 
-        // testing Notes:
-        // append and stdout work similarly, yeah ik
-        // test stderror without tsh>
-
-        // child prcess
-        if (thingy)
-        {
             sigprocmask(SIG_SETMASK, &prev, NULL); // unblock sigchld
             if (execve(argv[0], argv, environ) < 0)
             {
@@ -288,25 +265,24 @@ void eval(char *cmdline)
                 exit(0);
             }
         }
-    }
-    else // parent process
-    {
-        if (bg)
+        else // main parent process
         {
-            // unblock sigchld
-            addjob(jobs, pid, BG, cmdline);
-            sigprocmask(SIG_SETMASK, &prev, NULL);
-            printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
-        }
-        else
-        {
-            // unblock sigchld
-            addjob(jobs, pid, FG, cmdline);
-            sigprocmask(SIG_SETMASK, &prev, NULL);
-            waitfg(pid);
+            if (bg)
+            {
+                // unblock sigchld
+                addjob(jobs, pid, BG, cmdline);
+                sigprocmask(SIG_SETMASK, &prev, NULL);
+                printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
+            }
+            else
+            {
+                // unblock sigchld
+                addjob(jobs, pid, FG, cmdline);
+                sigprocmask(SIG_SETMASK, &prev, NULL);
+                waitfg(pid);
+            }
         }
     }
-
     return;
 }
 

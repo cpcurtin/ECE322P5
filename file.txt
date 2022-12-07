@@ -1,4 +1,4 @@
-a.out
+error.txt
 file.txt
 in.txt
 Makefile
@@ -10,6 +10,7 @@ mysplit
 mysplit.c
 mystop
 mystop.c
+out.txt
 README
 README.md
 sdriver.pl
@@ -31,13 +32,11 @@ trace15.txt
 trace16.txt
 tsh
 tsh 2
+tsh 3
 tsh.c
 tshref
 tshref.out
-a.out
-file.txt
-in.txt
-Makefile
+akefile
 myint
 myint.c
 myspin
@@ -46,6 +45,7 @@ mysplit
 mysplit.c
 mystop
 mystop.c
+out.txt
 README
 README.md
 sdriver.pl
@@ -67,6 +67,45 @@ trace15.txt
 trace16.txt
 tsh
 tsh 2
+tsh 3
+tsh.c
+tshref
+tshref.out
+error.txt
+file.txt
+in.txt
+Makefile
+myint
+myint.c
+myspin
+myspin.c
+mysplit
+mysplit.c
+mystop
+mystop.c
+out.txt
+README
+README.md
+sdriver.pl
+trace01.txt
+trace02.txt
+trace03.txt
+trace04.txt
+trace05.txt
+trace06.txt
+trace07.txt
+trace08.txt
+trace09.txt
+trace10.txt
+trace11.txt
+trace12.txt
+trace13.txt
+trace14.txt
+trace15.txt
+trace16.txt
+tsh
+tsh 2
+tsh 3
 tsh.c
 tshref
 tshref.out
