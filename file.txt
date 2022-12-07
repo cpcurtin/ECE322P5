@@ -36,11 +36,6 @@ tsh 3
 tsh.c
 tshref
 tshref.out
- 2
-tsh 3
-tsh.c
-tshref
-tshref.out
 akefile
 myint
 myint.c
